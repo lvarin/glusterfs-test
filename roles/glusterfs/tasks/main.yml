@@ -1,0 +1,35 @@
+---
+
+- name: Install GPG keys
+  yum:
+    name:
+      - centos-release-storage-common
+    state: present
+
+- name: Install GlusterFS v11 repository
+  become: yes
+  yum_repository:
+    name: gluster11
+    description: Gluster FS v11
+    baseurl: https://buildlogs.centos.org/centos/9-stream/storage/x86_64/gluster-11/
+    gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-SIG-Storage
+
+#- name: install updates
+#  yum: update_cache=yes
+
+- name: Ensure the crb repository is enabled
+  community.general.dnf_config_manager:
+    name: crb
+    state: enabled
+
+- name: Install GlusterFS
+  yum:
+    name:
+      - glusterfs-server
+    state: present
+
+- name: Enable and start Glusterd
+  service:
+    name: glusterd
+    enabled: yes
+    state: started
