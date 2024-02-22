@@ -37,3 +37,23 @@
   delay: 1
   with_items:
     - "{{ servers.results }}"
+
+#
+# Volumes
+#
+- name: create 1g test volumes
+  openstack.cloud.volume:
+    state: present
+    size: 1
+    name: "{{ item.item }}"
+  with_items:
+    - "{{ servers.results }}"
+
+- name: "Attach the volumes to node"
+  openstack.cloud.server_volume:
+    state: present
+    server: "{{ item.item }}"
+    volume: "{{ item.item }}"
+  with_items:
+    - "{{ servers.results }}"
+

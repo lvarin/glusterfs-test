@@ -33,3 +33,54 @@
     name: glusterd
     enabled: yes
     state: started
+
+- name: Set IPs
+  set_fact:
+    gluster_ips: "{{ groups['all'] | map('extract', hostvars, ['ansible_host']) }}"
+
+- name: Create a trusted storage pool
+  gluster.gluster.gluster_peer:
+    state: present
+    nodes: "{{ gluster_ips }}"
+
+- name: Create a xfs filesystem on /dev/sdb
+  filesystem:
+    fstype: xfs
+    dev: /dev/vdb
+
+- name: Create a directory if it does not exist
+  ansible.builtin.file:
+    path: /data/brick1/
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Mount brick folder
+  ansible.posix.mount:
+    path: /data/brick1/
+    src: /dev/vdb
+    fstype: xfs
+    state: mounted
+
+- name: Create brick directory
+  ansible.builtin.file:
+    path: /data/brick1/gv0
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+
+- name: Create gluster volume
+  gluster.gluster.gluster_volume:
+    state: present
+    name:  gv0
+    bricks: /data/brick1/gv0
+    rebalance: yes
+    cluster: "{{ gluster_ips }}"
+  run_once: true
+
+- name: start gluster volume
+  gluster.gluster.gluster_volume:
+    state: started
+    name: gv0
