@@ -13,6 +13,17 @@
     - instances
     - openstack_facts
 
+- name: Keys
+  hosts: created_instances
+  become: true
+  tasks:
+  - name: Set authorized key taken from keys/*
+    authorized_key:
+      user: "{{ ssh_user }}"
+      state: present
+      key: "{{ lookup('file', item) }}"
+    with_fileglob: "keys/*"
+
 - name: Configure VMs
   hosts: created_instances
   gather_facts: false
